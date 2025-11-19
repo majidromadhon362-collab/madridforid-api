@@ -25,13 +25,13 @@ module.exports = (req, res) => {
       {pos:20, team:"Almeria", played:12, gd:-12, pts:3},
     ];
 
-    return res.status(200).json({
+    res.status(200).json({
       league,
       updated: new Date().toISOString(),
       rows
     });
   } catch (err) {
     console.error("API ERROR:", err);
-    return res.status(500).json({ error: "Internal error" });
+    res.status(500).json({ error: "Internal error" });
   }
 };
