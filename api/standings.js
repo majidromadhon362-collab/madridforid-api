@@ -1,40 +1,35 @@
 export default async function handler(req, res) {
-  try {
-    const league = req.query.league || "laliga";
+  // CORS FIX
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-    const map = {
-      laliga: "PD",
-      premier: "PL",
-      bundesliga: "BL1",
-      ucl: "CL"
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  try {
+    const { league } = req.query;
+
+    // Data static sementara (buat test)
+    const data = {
+      league,
+      updated: new Date().toISOString(),
+      rows: [
+        { pos: 1, team: "Real Madrid", played: 12, gd: 18, pts: 30 },
+        { pos: 2, team: "Barcelona", played: 12, gd: 17, pts: 28 },
+        { pos: 3, team: "Atletico Madrid", played: 12, gd: 13, pts: 25 },
+        { pos: 4, team: "Girona", played: 12, gd: 12, pts: 22 },
+      ],
     };
 
-    const code = map[league];
-    if (!code) {
-      return res.status(400).json({ error: "Invalid league" });
-    }
+    return res.status(200).json(data);
 
-    const apiUrl = `https://api.football-data.org/v4/competitions/${code}/standings`;
-
-    const response = await fetch(apiUrl, {
-      headers: {
-        "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY
-      }
-    });
-
-    if (!response.ok) {
-      return res.status(500).json({ error: "API request failed" });
-    }
-
-    const data = await response.json();
-
-    const table = data.standings[0].table.map(row => ({
-      pos: row.position,
-      team: row.team.name,
-      played: row.playedGames,
-      gd: row.goalDifference,
-      pts: row.points
-    }));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+}    }));
 
     return res.status(200).json({
       league,
