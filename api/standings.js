@@ -1,7 +1,6 @@
-export default function handler(req, res) {
+module.exports = (req, res) => {
   const league = req.query.league || "laliga";
 
-  // Dummy 20 tim — biar Show All jalan
   const rows = [
     {pos:1, team:"Real Madrid", played:12, gd:18, pts:30},
     {pos:2, team:"Barcelona", played:12, gd:17, pts:28},
@@ -26,8 +25,8 @@ export default function handler(req, res) {
   ];
 
   res.status(200).json({
-    league: league,
+    league,
     updated: new Date(),
     rows
   });
-}
+};
