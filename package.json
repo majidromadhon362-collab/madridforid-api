@@ -1,5 +1,6 @@
 {
   "name": "madridforid-api",
   "version": "1.0.0",
+  "type": "commonjs",
   "dependencies": {}
 }
