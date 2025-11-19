@@ -1,4 +1,8 @@
 module.exports = (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
   try {
     const league = req.query.league || "laliga";
 
@@ -25,13 +29,14 @@ module.exports = (req, res) => {
       {pos:20, team:"Almeria", played:12, gd:-12, pts:3},
     ];
 
-    res.status(200).json({
+    return res.status(200).json({
       league,
       updated: new Date().toISOString(),
       rows
     });
+
   } catch (err) {
     console.error("API ERROR:", err);
-    res.status(500).json({ error: "Internal error" });
+    return res.status(500).json({ error: "Internal error" });
   }
 };
