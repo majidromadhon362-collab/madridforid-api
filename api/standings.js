@@ -1,74 +1,55 @@
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-
-/**
- * Load Firebase Service Account from env
- * (Sudah di-save ke Vercel sebagai FIREBASE_SERVICE_KEY)
- */
-const serviceAccount = JSON.parse("{" + process.env.FIREBASE_SERVICE_KEY + "}");
-
-// Inisialisasi Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
-}
-
-const db = getFirestore();
-
 export default async function handler(req, res) {
   try {
-    const { league = "laliga" } = req.query;
+    const league = req.query.league || "laliga";
 
-    const apiKey = process.env.API_FOOTBALL_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({ error: "API key missing" });
-    }
-
-    // Mapping kode liga → ID API-Football
-    const LEAGUE_MAP = {
-      laliga: 140,
-      epl: 39,
-      ucl: 2
+    // Mapping liga → kode kompetisi football-data.org
+    const map = {
+      laliga: "PD",
+      premier: "PL",
+      bundesliga: "BL1",
+      ucl: "CL"
     };
 
-    const leagueId = LEAGUE_MAP[league];
-
-    if (!leagueId) {
-      return res.status(400).json({ error: "Unknown league" });
+    const code = map[league];
+    if (!code) {
+      return res.status(400).json({ error: "Invalid league" });
     }
 
-    // Fetch standings dari API-Football
-    const url = `https://v3.football.api-sports.io/standings?league=${leagueId}&season=2024`;
+    const apiUrl = `https://api.football-data.org/v4/competitions/${code}/standings`;
 
-    const apiRes = await fetch(url, {
+    const response = await fetch(apiUrl, {
       headers: {
-        "x-apisports-key": apiKey
+        "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY
       }
     });
 
-    const json = await apiRes.json();
-
-    if (!json.response || json.response.length === 0) {
-      return res.status(500).json({ error: "Invalid API response" });
+    if (!response.ok) {
+      return res.status(500).json({ error: "API request failed" });
     }
 
-    // Ambil data standings
-    const table = json.response[0].league.standings[0];
+    const data = await response.json();
 
-    const rows = table.map(t => ({
-      pos: t.rank,
-      team: t.team.name,
-      played: t.all.played,
-      gd: t.goalsDiff,
-      pts: t.points
+    const table = data.standings[0].table.map(row => ({
+      pos: row.position,
+      team: row.team.name,
+      played: row.playedGames,
+      gd: row.goalDifference,
+      pts: row.points
     }));
 
-    // Simpan ke Firestore
-    await db.collection("standings").doc(league).set({
-      updatedAt: new Date(),
-      rows
+    return res.status(200).json({
+      league: league,
+      updated: new Date().toISOString(),
+      rows: table
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      error: "Server error",
+      details: err.message
+    });
+  }
+      }      rows
     });
 
     return res.status(200).json({
