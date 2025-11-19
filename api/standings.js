@@ -2,7 +2,6 @@ export default async function handler(req, res) {
   try {
     const league = req.query.league || "laliga";
 
-    // Mapping liga → kode kompetisi football-data.org
     const map = {
       laliga: "PD",
       premier: "PL",
@@ -38,7 +37,7 @@ export default async function handler(req, res) {
     }));
 
     return res.status(200).json({
-      league: league,
+      league,
       updated: new Date().toISOString(),
       rows: table
     });
@@ -49,17 +48,4 @@ export default async function handler(req, res) {
       details: err.message
     });
   }
-      }      rows
-    });
-
-    return res.status(200).json({
-      success: true,
-      league,
-      rows
-    });
-
-  } catch (err) {
-    console.error("API ERROR:", err);
-    return res.status(500).json({ error: err.message });
-  }
-  }
+      }
